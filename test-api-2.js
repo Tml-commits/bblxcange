@@ -1,0 +1,20 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const jwt = require("jsonwebtoken");
+require("dotenv").config({ path: ".env.local" });
+
+async function main() {
+  const user = await prisma.user.findFirst();
+  if (!user) {
+    console.log("No user found");
+    return;
+  }
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || "default_secret");
+  console.log("Using user ID:", user.id);
+  const r = await fetch("http://localhost:3000/api/ccpayment/coins", {
+    headers: { "WizcoinAccessToken": token }
+  });
+  const data = await r.json();
+  console.log(r.status, data);
+}
+main();
